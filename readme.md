@@ -1,5 +1,6 @@
-## This is the code for Policy Learning with Partial Observation and Mechanical Constraints for Multi-person Modeling (NeurIPS 2020 submission).
+# Policy Learning with Partial Observation and Mechanical Constraints
 
+This is the code for Policy Learning with Partial Observation and Mechanical Constraints for Multi-person Modeling (NeurIPS 2020 submission).
 
 ## Requirements
 
