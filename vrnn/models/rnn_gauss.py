@@ -6,6 +6,9 @@ from vrnn.models.utils import sample_gauss, nll_gauss, kld_gauss, sample_multino
 from vrnn.models.utils import batch_error, roll_out, sample_gumbel, sample_gumbel_softmax
 import torch.nn.functional as F
 
+# Keisuke Fujii, 2020
+# modifying the code https://github.com/ezhan94/multiagent-programmatic-supervision
+
 class RNN_GAUSS(nn.Module):
     """RNN model for each agent."""
 
@@ -45,7 +48,8 @@ class RNN_GAUSS(nn.Module):
 
         self.batchnorm = True # if self.attention >= 2 else False
         self.in_state0 = True # raw current state input
-
+        self.fixedsigma = False 
+        print('batchnorm = '+str(self.batchnorm)+ ', fixedsigma = '+str(self.fixedsigma))
         # currently not considerd 
         if params['acc'] == -1: # and self.params['body']: # body_pretrain:
             x_dim = 2
@@ -205,8 +209,10 @@ class RNN_GAUSS(nn.Module):
 
                 dec_t = self.dec[i](h[i][-1])
                 dec_mean_t = self.dec_mean[i](dec_t)
-                dec_std_t = self.dec_std[i](dec_t)
-
+                if not self.fixedsigma:
+                    dec_std_t = self.dec_std[i](dec_t)
+                else:
+                    dec_std_t = self.fixedsigma**2*torch.ones(dec_mean_t.shape).to(device)  
                 _, h[i] = self.rnn[i](enc_in.unsqueeze(0), h[i])
 
                 # objective function
@@ -420,8 +426,10 @@ class RNN_GAUSS(nn.Module):
                             dec_t = self.bn_dec[i](dec_t) 
                         except: import pdb; pdb.set_trace() 
                     dec_mean_t = self.dec_mean[i](dec_t)
-                    dec_std_t = self.dec_std[i](dec_t)
-
+                    if not self.fixedsigma:
+                        dec_std_t = self.dec_std[i](dec_t)
+                    else:
+                        dec_std_t = self.fixedsigma**2*torch.ones(dec_mean_t.shape).to(device)  
                     # objective function
                     out['L_rec'][n] += nll_gauss(dec_mean_t, dec_std_t, x_t, Sum)
 

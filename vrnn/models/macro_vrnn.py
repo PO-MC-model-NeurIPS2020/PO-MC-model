@@ -6,6 +6,9 @@ from vrnn.models.utils import sample_gauss, nll_gauss, kld_gauss, sample_multino
 from vrnn.models.utils import batch_error, roll_out, sample_gumbel, sample_gumbel_softmax
 import torch.nn.functional as F
 
+# Keisuke Fujii, 2020
+# modifying the code https://github.com/ezhan94/multiagent-programmatic-supervision
+
 class MACRO_VRNN(nn.Module):
 
     def __init__(self, params, parser=None):
@@ -53,13 +56,14 @@ class MACRO_VRNN(nn.Module):
         self.xavier = True # initial value
         self.res = params['res'] # like resnet  
 
-        self.beta = 0.2 if params['dataset'] == 'nba' else 0.01 # 0.2
-        self.gamma1 = 0.5 if params['dataset'] == 'nba' else 0.01  # 0.5
+        self.beta = 0.01 if params['dataset'] == 'nba' else 0.01 
+        self.gamma1 = 0.1 if params['dataset'] == 'nba' else 0.01  
         self.gamma2 = self.params['lam_acc'] 
         self.batchnorm = True  
+        self.fixedsigma = False
         if self.params['body']:
-            print('beta = '+str(self.beta)+', gamma1 = '+str(self.gamma1)+', jrk = '+str(self.jrk)) # ', gamma2 = '+str(self.gamma2)+
-        print('batchnorm = '+str(self.batchnorm))
+            print('beta = '+str(self.beta)+', gamma1 = '+str(self.gamma1)+', gamma2 = '+str(self.gamma2)+', jrk = '+str(self.jrk)) # 
+        print('batchnorm = '+str(self.batchnorm)+ ', fixedsigma = '+str(self.fixedsigma))
         self.in_state0 = True # raw current state input
         
         # currently not considerd 
@@ -209,6 +213,8 @@ class MACRO_VRNN(nn.Module):
             nn.ReLU(),
             nn.Dropout(dropout)) for i in range(n_agents)])
         self.dec_mean = nn.ModuleList([nn.Linear(h_dim, rnn_in_x) for i in range(n_agents)])
+
+        #if not self.fixedsigma:
         self.dec_std = nn.ModuleList([nn.Sequential(
             nn.Linear(h_dim, rnn_in_x),
             nn.Softplus()) for i in range(n_agents)])       
@@ -522,7 +528,7 @@ class MACRO_VRNN(nn.Module):
 
                     dec_t = self.dec[i](torch.cat([state_in0,state_in, m_t[i], z_t, h_micro[i][-1]], 1))
                     if self.batchnorm:
-                        dec_t = self.bn_dec[i](dec_t)  
+                        dec_t = self.bn_dec[i](dec_t)
 
                     dec_mean_t = self.dec_mean[i](dec_t)
                     if self.res:
@@ -530,7 +536,11 @@ class MACRO_VRNN(nn.Module):
                             dec_mean_t[:,4:6] += state_in0[:,4:6]
                         elif acc == -1:
                             dec_mean_t += state_in0     
-                    dec_std_t = self.dec_std[i](dec_t)
+        
+                    if not self.fixedsigma:
+                        dec_std_t = self.dec_std[i](dec_t)
+                    else:
+                        dec_std_t = self.fixedsigma**2*torch.ones(dec_mean_t.shape).to(device)  
 
                     _, h_micro[i] = self.gru_micro[i](torch.cat([x_t, z_t], 1).unsqueeze(0), h_micro[i])
 
@@ -854,9 +864,7 @@ class MACRO_VRNN(nn.Module):
 
                     # attention 
                     if self.attention >= 1: # individual 
-                        try:
-                            _, hard_att[t,i,:,:,n], ind_embed, dec_macro_t = self.func_attention(y_t, h_macro[i][n][-1], i, batchSize, Sample=False, macro=(self.macro)) # soft_att[t,i,:,:,n]
-                        except:import pdb; pdb.set_trace()
+                        _, hard_att[t,i,:,:,n], ind_embed, dec_macro_t = self.func_attention(y_t, h_macro[i][n][-1], i, batchSize, Sample=False, macro=(self.macro)) # soft_att[t,i,:,:,n]
                         if self.indep and self.macro:    
                             if t >= burn_in:
                                 m_t[i] = sample_multinomial(torch.exp(dec_macro_t))
@@ -905,9 +913,11 @@ class MACRO_VRNN(nn.Module):
                         if acc == 3:
                             dec_mean_t[:,4:6] += state_in0[:,4:6]
                         elif acc == -1:
-                            dec_mean_t += state_in0               
-                    dec_std_t = self.dec_std[i](dec_t)
-                    
+                            dec_mean_t += state_in0        
+                    if not self.fixedsigma:       
+                        dec_std_t = self.dec_std[i](dec_t)
+                    else:
+                        dec_std_t = self.fixedsigma**2*torch.ones(dec_mean_t.shape).to(device)  
                     # objective function
                     # for evaluation only
                     enc_t = self.enc[i](enc_in)
@@ -1005,7 +1015,7 @@ class MACRO_VRNN(nn.Module):
                         # if acc == 2 and body:
                         out2['a_acc'][n] += batch_error(a_t1, [], Sum, diff=False)
 
-                        # out['L_rec'][n] = out2['e_vel'] + out2['e_acc'] 
+                        # out['L_rec'][n] += out2['e_vel'][n] + out2['e_acc'][n]
 
                         if rollout and self.in_out: # for acc == 3, TBD
                             states[n][t+1][i] = torch.cat([next_pos,v_t1],dim=1)
@@ -1085,13 +1095,11 @@ class MACRO_VRNN(nn.Module):
             agentList = [k for k in range(n_all_agents+1)]
             agentList.remove(i)
             att = hard_att[batch,:] 
-            try:
-                att = torch.cat([att[0:i], att[i+1:]])
-                _, ind = att.max(0)
-                agentList.remove(agentList[ind])
-                hard_att[batch][agentList] = zeros
-                hard_att[batch][i] = zeros[0] # added
-            except: import pdb; pdb.set_trace()
+            att = torch.cat([att[0:i], att[i+1:]])
+            _, ind = att.max(0)
+            agentList.remove(agentList[ind])
+            hard_att[batch][agentList] = zeros
+            hard_att[batch][i] = zeros[0] 
         return hard_att
 
     def CF_farthest(self,y_t,hard_att,n_feat,n_all_agents,batchSize,i):
