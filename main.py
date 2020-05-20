@@ -60,7 +60,7 @@ parser.add_argument('--in_out', action='store_true')
 # parser.add_argument('--in_sma', action='store_true')
 # parser.add_argument('--meanHMM', action='store_true')
 parser.add_argument('--cont', action='store_true')
-parser.add_argument('--numProcess', type=int)
+parser.add_argument('--numProcess', type=int, default=16)
 parser.add_argument('--TEST', action='store_true')
 parser.add_argument('--Sanity', action='store_true')
 parser.add_argument('--hard_only', action='store_true')
@@ -78,8 +78,7 @@ args, _ = parser.parse_known_args()
 main_dir = '../' # './'
 game_dir = main_dir+'data_'+args.data+'/'
 Data = LoadData(main_dir, game_dir, args.data)
-path_IL = './weights_vrnn/IL/'
-path_init = './weights_vrnn/init/'
+path_init = './weights/' # './weights_vrnn/init/'
 
 def run_epoch(train,rollout,hp):
     loader = train_loader if train == 1 else val_loader if train == 0 else test_loader
@@ -563,7 +562,7 @@ if __name__ == '__main__':
         else: 
             import pdb; pdb.set_trace()
 
-        J = 4
+        J = 8
         batchval = int(len_seqs_val/J)
         for j in range(J):
             if j < J-1:

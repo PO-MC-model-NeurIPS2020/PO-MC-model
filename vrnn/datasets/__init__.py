@@ -28,12 +28,13 @@ class GeneralDataset(Dataset):
             with open(self.game_files+'_tr'+str(batch_no)+'.pkl', 'rb') as f:
                 data,_,_,label = cloudpickle.load(f) # ,allow_pickle=True
         else:
-            batch_no = index // int(self.len_seqs/4)
-            if batch_no < 4:
-                batch_index = index % int(self.len_seqs/4)
+            J = 8
+            batch_no = index // int(self.len_seqs/J)
+            if batch_no < J:
+                batch_index = index % int(self.len_seqs/J)
             else:
-                batch_no = 3
-                batch_index = index % int(self.len_seqs/4) + int(self.len_seqs/4)
+                batch_no = J-1
+                batch_index = index % int(self.len_seqs/J) + int(self.len_seqs/J)
             filename = self.game_files+'_val' if self.train == 0 else self.game_files +'_te'
             with open(filename+'_'+str(batch_no)+'.pkl', 'rb') as f:
                 data,label = cloudpickle.load(f) 
