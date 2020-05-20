@@ -1,7 +1,6 @@
 #!/bin/bash
-source $HOME/workspace5/torchVRNN/bin/activate 
-# test code with small samples
-# python -u main.py --data nba --n_GorS 1 --n_roles 5 --batchsize 32 --n_epoch 3 -ev_th 200 --model MACRO_VRNN --attention 3 --body --jrk 0.2 --lam_acc 0.2 --pretrain 50 
+# a simple demostration code with small samples
+python -u main.py --data nba --n_GorS 1 --n_roles 5 --batchsize 32 --n_epoch 3 -ev_th 200 --model MACRO_VRNN --attention 3 --body --jrk 0.2 --lam_acc 0.2 --pretrain 50 
 
 # attention = -1: w/o embedding 
 # attention =  3: individual binary observation
@@ -9,7 +8,7 @@ source $HOME/workspace5/torchVRNN/bin/activate
 # actual training and test code
 # for training, remove --TEST
 # 1. Sanity check & 2.RNN-gauss 
-python -u main.py --data nba --n_GorS 100 --n_roles 5 --batchsize 256 --n_epoch 10 -ev_th 200 --model RNN_GAUSS --attention -1 --Sanity --TEST
+# python -u main.py --data nba --n_GorS 100 --n_roles 5 --batchsize 256 --n_epoch 10 -ev_th 200 --model RNN_GAUSS --attention -1 --Sanity --TEST
 # 3. VRNN
 # python -u main.py --data nba --n_GorS 100 --n_roles 5 --batchsize 256 --n_epoch 8 -ev_th 200 --model MACRO_VRNN --attention -1 --wo_macro --acc 2 --TEST 
 # 4. VRNN-macro
