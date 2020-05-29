@@ -6,7 +6,7 @@ import matplotlib.image as mpimg
 import _pickle as pickle
 import os
 
-# Keisuke Fujii, 2020
+# anonymous, 2020
 # modifying the code https://github.com/samshipengs/Coordinated-Multi-Agent-Imitation-Learning
 
 color_dict = {

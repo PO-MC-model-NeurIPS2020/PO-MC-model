@@ -30,7 +30,7 @@ from sequencing import get_sequences
 
 #from scipy import signal
 
-# Keisuke Fujii, 2020
+# anonymous, 2020
 # modifying the codes
 # https://github.com/samshipengs/Coordinated-Multi-Agent-Imitation-Learning
 # https://github.com/ezhan94/multiagent-programmatic-supervision

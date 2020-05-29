@@ -13,7 +13,7 @@ import matplotlib.image as mpimg
 import matplotlib.patches as patches
 import matplotlib.gridspec as gridspec
 
-# Keisuke Fujii, 2020
+# anonymous, 2020
 # modifying the code https://github.com/samshipengs/Coordinated-Multi-Agent-Imitation-Learning
  
 # ===================================================================

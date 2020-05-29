@@ -3,7 +3,7 @@ import glob, os, sys, math, warnings, copy, time, glob
 import numpy as np
 import pandas as pd
 
-# Keisuke Fujii, 2020
+# anonymous, 2020
 # modifying the code https://github.com/samshipengs/Coordinated-Multi-Agent-Imitation-Learning
 
 # =================================================================

@@ -8,7 +8,7 @@ from features import OneHotEncoding, flatten_moments, create_static_features, cr
 from hidden_role_learning import HiddenStructureLearning
 from sequencing import subsample_sequence
 
-# Keisuke Fujii, 2020
+# anonymous, 2020
 # modifying the code https://github.com/samshipengs/Coordinated-Multi-Agent-Imitation-Learning
 
 # ================================================================================================
