@@ -1,6 +1,6 @@
-## Policy Learning with Partial Observation and Mechanical Constraints
+## Decentralized Policy Learning with Partial Observation and Mechanical Constraints
 
-This is the python code for Policy Learning with Partial Observation and Mechanical Constraints for Multi-person Modeling (NeurIPS 2020 submission).
+This is the python code for Decentralized Policy Learning with Partial Observation and Mechanical Constraints for Multi-person Modeling.
 
 ## Requirements
 
